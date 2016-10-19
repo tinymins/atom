@@ -2,6 +2,8 @@ _ = require 'underscore-plus'
 path = require 'path'
 fs = require 'fs-plus'
 Grim = require 'grim'
+iconv = require 'iconv-lite'
+jschardet = require 'jschardet'
 {CompositeDisposable, Disposable, Emitter} = require 'event-kit'
 {Point, Range} = TextBuffer = require 'text-buffer'
 LanguageMode = require './language-mode'
@@ -245,6 +247,10 @@ class TextEditor extends Model
 
         when 'encoding'
           @buffer.setEncoding(value)
+        
+        when 'detectEncoding'
+          if value
+            @detectEncoding()
 
         when 'softTabs'
           if value isnt @softTabs
@@ -867,6 +873,23 @@ class TextEditor extends Model
   #
   # * `encoding` The {String} character set encoding name such as 'utf8'
   setEncoding: (encoding) -> @buffer.setEncoding(encoding)
+
+  # Extended: Detect and returns the {String} character set encoding of this editor's
+  # text buffer.
+  detectEncoding: ->
+    filePath = @getPath()
+    return unless fs.existsSync(filePath)
+
+    fs.readFile filePath, (error, buffer) =>
+      return if error?
+
+      {encoding} = jschardet.detect(buffer) ? {}
+      encoding = 'utf8' if encoding is 'ascii'
+      return unless iconv.encodingExists(encoding)
+
+      encoding = encoding.toLowerCase().replace(/[^0-9a-z]|:\d{4}$/g, '')
+      @setEncoding(encoding)
+      return encoding
 
   # Essential: Returns {Boolean} `true` if this editor has been modified.
   isModified: -> @buffer.isModified()

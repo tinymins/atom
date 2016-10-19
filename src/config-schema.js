@@ -121,6 +121,11 @@ const configSchema = {
           'windows866'
         ]
       },
+      fileEncodingAutoDetect: {
+        description: 'Auto detect character set encoding when reading files. If failed on detect, default encoding above will be used.',
+        type: 'boolean',
+        default: true
+      },
       openEmptyEditorOnStart: {
         description: 'Automatically open an empty editor on startup.',
         type: 'boolean',
